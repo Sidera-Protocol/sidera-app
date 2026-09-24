@@ -5,15 +5,9 @@
  *   registry via @sidera-protocol/sdk (Soroban RPC reads).
  * Contract ID empty (default) → demo mode backed by an in-memory mock
  *   registry, so the UI is fully explorable before deployment.
- *
- * NOTE: the github-hosted SDK dependency is commented out in package.json
- * because this sandbox disables git-package fetches. The SDK is vendored in
- * `src/lib/sdk-shim.ts` with the identical API surface; re-enable the
- * dependency and swap the import to `@sidera-protocol/sdk` once built
- * locally (`npm pack`/`npm link`) or when git deps are permitted.
  */
 
-import type { ParsedMemo } from "./sdk-shim";
+import type { ParsedMemo } from "@sidera-protocol/sdk";
 import { DEMO_OWNER, MOCK_REGISTRY } from "./mock-registry";
 
 export { DEMO_OWNER };
@@ -67,8 +61,8 @@ export async function lookupName(raw: string): Promise<LookupResult> {
     return { status: "found", record: { name, fullName: `${name}.sid`, ...hit, source: "demo", available: false } };
   }
 
-  // Live path via the real SDK (swap import once the git dep is enabled).
-  const { SideraClient } = await import("./sdk-shim");
+  // Live path via the real SDK.
+  const { SideraClient } = await import("@sidera-protocol/sdk");
   const client = new SideraClient({
     contractId: CONTRACT_ID,
     network: (process.env.NEXT_PUBLIC_SIDERIA_NETWORK as "testnet" | "futurenet") ?? "testnet",
@@ -112,24 +106,52 @@ export async function namesOwnedBy(owner: string): Promise<NameRecordView[]> {
       }));
   }
 
-  const { SideraClient } = await import("./sdk-shim");
+  const { SideraClient } = await import("@sidera-protocol/sdk");
   const client = new SideraClient({
     contractId: CONTRACT_ID,
     network: (process.env.NEXT_PUBLIC_SIDERIA_NETWORK as "testnet" | "futurenet") ?? "testnet",
   });
-  const owned: string[] = await client.namesOfOwner(owner);
-  return Promise.all(
-    owned.map(async (name) => {
+  // Owner-listing requires the contract's enumeration tranche (tracked in
+  // the issue ladder). Until then, live mode checks the local registration
+  // log kept by this client — names registered from this browser resolve
+  // correctly; otherwise the dashboard points contributors at the ladder.
+  const tracked = localRegistrationLog();
+  const results: NameRecordView[] = [];
+  for (const name of tracked) {
+    try {
+      if ((await client.ownerOf(name)) !== owner) continue;
       const res = await client.resolve(name);
-      return {
+      results.push({
         name: res.name,
         fullName: res.fullName,
         owner: res.owner,
         address: res.address,
         memo: res.memo,
-        source: "chain" as const,
+        source: "chain",
         available: false,
-      };
-    }),
-  );
+      });
+    } catch {
+      // Name since expired or removed — drop from the log on read.
+    }
+  }
+  return results;
+}
+
+const LOG_KEY = "sidera:my-names";
+
+function localRegistrationLog(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(window.localStorage.getItem(LOG_KEY) ?? "[]") as string[];
+  } catch {
+    return [];
+  }
+}
+
+export function rememberRegistration(name: string): void {
+  if (typeof window === "undefined") return;
+  const log = localRegistrationLog();
+  if (!log.includes(name)) {
+    window.localStorage.setItem(LOG_KEY, JSON.stringify([...log, name]));
+  }
 }

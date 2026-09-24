@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Loader2, ShieldCheck, X, AlertTriangle, Sparkles } from "lucide-react";
-import { DEMO_MODE } from "@/lib/sidera";
+import { DEMO_MODE, rememberRegistration } from "@/lib/sidera";
 import { useWallet } from "@/lib/useWallet";
 
 export interface RegisterTarget {
@@ -42,7 +42,7 @@ export default function RegisterModal({
         await new Promise((r) => setTimeout(r, 900));
       } else {
         const { signTransaction, getNetwork } = await import("@stellar/freighter-api");
-        const { SideraClient } = await import("@/lib/sdk-shim");
+        const { SideraClient } = await import("@sidera-protocol/sdk");
         const client = new SideraClient({
           contractId: process.env.NEXT_PUBLIC_SIDERIA_CONTRACT_ID ?? "",
           network:
@@ -56,6 +56,7 @@ export default function RegisterModal({
       setStep("submitting");
       await new Promise((r) => setTimeout(r, 400));
       setStep("done");
+      rememberRegistration(target.name);
       onRegistered(target.name);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");

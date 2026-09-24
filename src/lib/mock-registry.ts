@@ -2,7 +2,7 @@
  * Demo-mode registry data. Shaped exactly like on-chain records so the UI
  * path is identical between demo and live modes.
  */
-import type { ParsedMemo } from "./sdk-shim";
+import type { ParsedMemo } from "@sidera-protocol/sdk";
 
 export interface MockRecord {
   owner: string;
