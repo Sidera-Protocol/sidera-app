@@ -69,12 +69,15 @@ export async function lookupName(raw: string): Promise<LookupResult> {
   });
   try {
     const res = await client.resolve(name);
+    // The registry keeps ownership separate from the payment record
+    // (`owner_of` entrypoint), so fetch it alongside the resolution.
+    const ownerAddress = await client.ownerOf(name);
     return {
       status: "found",
       record: {
         name: res.name,
         fullName: res.fullName,
-        owner: res.owner,
+        owner: ownerAddress,
         address: res.address,
         memo: res.memo,
         source: "chain",
@@ -119,12 +122,13 @@ export async function namesOwnedBy(owner: string): Promise<NameRecordView[]> {
   const results: NameRecordView[] = [];
   for (const name of tracked) {
     try {
-      if ((await client.ownerOf(name)) !== owner) continue;
+      const nameOwner = await client.ownerOf(name);
+      if (nameOwner !== owner) continue;
       const res = await client.resolve(name);
       results.push({
         name: res.name,
         fullName: res.fullName,
-        owner: res.owner,
+        owner: nameOwner,
         address: res.address,
         memo: res.memo,
         source: "chain",
