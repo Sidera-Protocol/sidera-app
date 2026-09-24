@@ -37,6 +37,11 @@ cp .env.example .env   # live testnet config is already filled in
 npm run dev            # http://localhost:3000
 ```
 
+The `@sidera-protocol/sdk` dependency is vendored as a tarball
+(`vendor/`), so fresh clones install standalone — no sibling checkout
+of the SDK repo required. Once the SDK is on npm, this switches to a
+regular version pin.
+
 ## Suite
 
 | Repo | Layer |

@@ -10,7 +10,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@sidera-protocol/sdk": "file:../sidera-sdk/sidera-protocol-sdk-0.1.0.tgz",
+    "@sidera-protocol/sdk": "file:vendor/sidera-protocol-sdk-0.1.0.tgz",
     "@stellar/freighter-api": "^6.0.1",
     "@stellar/stellar-sdk": "^13.2.0",
     "lucide-react": "^0.474.0",
