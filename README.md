@@ -3,6 +3,10 @@
 **The web frontend for the Sidera Stellar Name Service — search, resolve,
 and claim `.sid` names.**
 
+See the [Sidera documentation hub](https://github.com/Sidera-Protocol/sidera-contracts/blob/main/docs/README.md)
+for the repository map, current testnet deployment, integration flow, and
+cross-repository contribution guidance.
+
 > 💠 Contribute via **Drips Wave** & **GrantFox** — see the labeled issue
 > ladder and `CONTRIBUTING.md`. Fork-first; PRs against `main`.
 
