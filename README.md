@@ -5,7 +5,9 @@ and claim `.sid` names.**
 
 See the [Sidera documentation hub](https://github.com/Sidera-Protocol/sidera-contracts/blob/main/docs/README.md)
 for the repository map, current testnet deployment, integration flow, and
-cross-repository contribution guidance.
+cross-repository contribution guidance. See the
+[troubleshooting guide](docs/TROUBLESHOOTING.md) for configuration, wallet,
+network, and memo-hint issues.
 
 > 💠 Contribute via **Drips Wave** & **GrantFox** — see the labeled issue
 > ladder and `CONTRIBUTING.md`. Fork-first; PRs against `main`.
