@@ -9,8 +9,8 @@ cross-repository contribution guidance. See the
 [troubleshooting guide](docs/TROUBLESHOOTING.md) for configuration, wallet,
 network, and memo-hint issues.
 
-> 💠 Contribute via **Drips Wave** & **GrantFox** — see the labeled issue
-> ladder and `CONTRIBUTING.md`. Fork-first; PRs against `main`.
+> 💠 Contribute — see the labeled issue ladder and `CONTRIBUTING.md`.
+> Fork-first; PRs against `main`.
 
 ## What it does
 
