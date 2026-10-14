@@ -141,7 +141,51 @@ export async function namesOwnedBy(owner: string): Promise<NameRecordView[]> {
   return results;
 }
 
+/** Read an address's preferred reverse-resolution name. */
+export async function primaryNameOf(address: string): Promise<string | null> {
+  if (DEMO_MODE) {
+    if (typeof window === "undefined") return "alice";
+    return window.localStorage.getItem(PRIMARY_NAME_KEY) ?? "alice";
+  }
+
+  const { SideraClient } = await import("@sidera-protocol/sdk");
+  const client = new SideraClient({
+    contractId: CONTRACT_ID,
+    network: (process.env.NEXT_PUBLIC_SIDERIA_NETWORK as "testnet" | "futurenet") ?? "testnet",
+  });
+  try {
+    return await client.primaryName(address);
+  } catch (err) {
+    if (err instanceof Error && /not registered|NotFound/i.test(err.message)) return null;
+    throw err;
+  }
+}
+
+/** Set an address's preferred reverse-resolution name through Freighter. */
+export async function setPrimaryName(address: string, name: string): Promise<void> {
+  if (DEMO_MODE) {
+    window.localStorage.setItem(PRIMARY_NAME_KEY, name.trim().toLowerCase().replace(/\.sid$/, ""));
+    return;
+  }
+
+  const [{ signTransaction, getNetwork }, { SideraClient }] = await Promise.all([
+    import("@stellar/freighter-api"),
+    import("@sidera-protocol/sdk"),
+  ]);
+  const { networkPassphrase } = await getNetwork();
+  const client = new SideraClient({
+    contractId: CONTRACT_ID,
+    network: (process.env.NEXT_PUBLIC_SIDERIA_NETWORK as "testnet" | "futurenet") ?? "testnet",
+    signer: {
+      signTx: async (txXdr) =>
+        (await signTransaction(txXdr, { networkPassphrase, address })).signedTxXdr,
+    },
+  });
+  await client.setPrimaryName(address, name);
+}
+
 const LOG_KEY = "sidera:my-names";
+const PRIMARY_NAME_KEY = "sidera:primary-name";
 
 function localRegistrationLog(): string[] {
   if (typeof window === "undefined") return [];
