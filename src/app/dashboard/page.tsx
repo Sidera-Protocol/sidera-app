@@ -2,10 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Loader2, Plus, Wallet, AlertCircle, Inbox } from "lucide-react";
+import { Loader2, Plus, Wallet, AlertCircle, Inbox, Pencil, Check } from "lucide-react";
 import Navbar, { type NetworkChoice } from "@/components/Navbar";
 import DomainCard from "@/components/DomainCard";
-import { DEMO_MODE, namesOwnedBy, DEMO_OWNER, type NameRecordView } from "@/lib/sidera";
+import {
+  DEMO_MODE,
+  namesOwnedBy,
+  primaryNameOf,
+  setPrimaryName,
+  DEMO_OWNER,
+  type NameRecordView,
+} from "@/lib/sidera";
 import { useWallet } from "@/lib/useWallet";
 
 export default function DashboardPage() {
@@ -14,6 +21,10 @@ export default function DashboardPage() {
   const [records, setRecords] = useState<NameRecordView[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [primary, setPrimary] = useState<string | null>(null);
+  const [editingPrimary, setEditingPrimary] = useState(false);
+  const [primaryInput, setPrimaryInput] = useState("");
+  const [savingPrimary, setSavingPrimary] = useState(false);
 
   // Demo mode: show the demo owner's names without requiring a wallet.
   const owner = wallet.connected ? wallet.address : DEMO_MODE ? DEMO_OWNER : null;
@@ -23,13 +34,31 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      setRecords(await namesOwnedBy(owner));
+      const [owned, preferred] = await Promise.all([namesOwnedBy(owner), primaryNameOf(owner)]);
+      setRecords(owned);
+      setPrimary(preferred);
+      setPrimaryInput(preferred ?? "");
     } catch {
       setError("Could not load your names — is the registry reachable?");
     } finally {
       setLoading(false);
     }
   }, [owner]);
+
+  async function savePrimary() {
+    if (owner == null) return;
+    setSavingPrimary(true);
+    setError(null);
+    try {
+      await setPrimaryName(owner, primaryInput);
+      setPrimary(primaryInput.trim().toLowerCase().replace(/\.sid$/, ""));
+      setEditingPrimary(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update your primary name");
+    } finally {
+      setSavingPrimary(false);
+    }
+  }
 
   useEffect(() => {
     void load();
@@ -60,6 +89,48 @@ export default function DashboardPage() {
             <Plus className="h-4 w-4" aria-hidden /> New name
           </Link>
         </header>
+
+        {owner && (
+          <section className="mb-6 rounded-2xl border border-space-800 bg-space-900 p-5">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-500">Preferred display name</p>
+                {editingPrimary ? (
+                  <input
+                    value={primaryInput}
+                    onChange={(e) => setPrimaryInput(e.target.value)}
+                    placeholder="your-name"
+                    aria-label="Preferred display name"
+                    className="mt-2 w-full rounded-lg border border-space-700 bg-space-950 px-3 py-2 font-mono text-sm text-white outline-none focus:border-star-500"
+                  />
+                ) : (
+                  <p className="mt-1 font-mono text-lg text-white">{primary ? `${primary}.sid` : "not set"}</p>
+                )}
+              </div>
+              {editingPrimary ? (
+                <button
+                  type="button"
+                  onClick={() => void savePrimary()}
+                  disabled={savingPrimary || primaryInput.trim().length === 0}
+                  className="flex shrink-0 items-center gap-2 rounded-lg bg-star-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+                >
+                  <Check className="h-4 w-4" aria-hidden /> {savingPrimary ? "saving…" : "Save"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditingPrimary(true)}
+                  className="flex shrink-0 items-center gap-2 rounded-lg border border-space-700 px-3 py-2 text-sm text-gray-300 hover:border-star-500 hover:text-white"
+                >
+                  <Pencil className="h-4 w-4" aria-hidden /> Edit
+                </button>
+              )}
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              Wallets can show this name when displaying your address. {DEMO_MODE ? "Demo changes stay in this browser." : "Saving opens Freighter for approval."}
+            </p>
+          </section>
+        )}
 
         {!wallet.ready && !DEMO_MODE && (
           <div className="h-24 animate-pulse rounded-2xl bg-space-900" aria-hidden />
