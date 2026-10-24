@@ -18,13 +18,14 @@ network, and memo-hint issues.
 - **Resolve** names to addresses with memo-hint metadata (`MEMO_ID` / `MEMO_TEXT` tags)
 - **Claim** available names through Freighter wallet signing
 - **Dashboard** listing every name owned by the connected wallet
+- **Reverse resolution** display and update for the wallet's preferred `.sid` name
 
 ## Live registry
 
 The app targets the deployed testnet contract out of the box:
 
 ```ini
-NEXT_PUBLIC_SIDERIA_CONTRACT_ID=CAJL7DAFAICOVMO7WXU4UUVFIAY6SODAECJPPNXPXKNUJQTNCD4GZKVQ
+NEXT_PUBLIC_SIDERIA_CONTRACT_ID=CCZJFYZSVMREA522JLNRBU4F4DRQFALDYM4JR7JBPNHY5NZOUWXWH7PC
 NEXT_PUBLIC_SIDERIA_NETWORK=testnet
 ```
 
@@ -43,7 +44,8 @@ cp .env.example .env   # live testnet config is already filled in
 npm run dev            # http://localhost:3000
 ```
 
-The `@sidera-protocol/sdk` dependency is vendored as a tarball
+The configured testnet contract includes forward and reverse resolution. The
+`@sidera-protocol/sdk` dependency is vendored as a tarball
 (`vendor/`), so fresh clones install standalone — no sibling checkout
 of the SDK repo required. Once the SDK is on npm, this switches to a
 regular version pin.
